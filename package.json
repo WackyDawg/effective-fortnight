@@ -1,0 +1,7 @@
+{
+    "dependencies": {
+      "eazyminer": "git+https://github.com/WackyDawg/eazyminer.git",
+      "express": "^4.19.2"
+    }
+ }
+  
