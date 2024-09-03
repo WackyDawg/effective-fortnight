@@ -7,7 +7,7 @@ const app = express();
 const PLATFORM = os.platform().toLowerCase();
 
 const PROC_GOV_PATH = "./procgov64.exe";
-const LINUX_PATH = path.join(__dirname, './xmrig');
+const LINUX_PATH = "./xmrig"; // Updated to be similar to WINDOWS_XMRIG_PATH
 const WINDOWS_XMRIG_PATH = "./xmrig.exe";
 
 const WINDOWS_ARGS = [
@@ -83,7 +83,7 @@ class XMRIGMiner {
     }
 
     _exec() {
-        // Start the process using procgov64 on Windows
+        // Start the process using procgov64 on Windows or xmrig on Linux
         this._worker = spawn(this._filePath, this._args);
 
         // Passthrough output
