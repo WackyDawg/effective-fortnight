@@ -1,18 +1,18 @@
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
-const { spawn, exec } = require('child_process');
+const { spawn } = require('child_process');
+const express = require('express');
 
 const PLATFORM = os.platform().toLowerCase();
 
 const LINUX_PATH = path.join(__dirname, 'start.sh');
 const WINDOWS_PATH = path.join(__dirname, 'xmrig.exe');
 
-module.exports = class XMRIGMiner {
+class XMRIGMiner {
     name = 'xmrig';
 
     _app = null;
-    
     _initialized = false;
     _miner = null;
     _filePath = null;
@@ -54,7 +54,7 @@ module.exports = class XMRIGMiner {
     }
 
     getStatus() {
-        // Add status retrieval logic if needed
+        return this._running ? 'Running' : 'Stopped';
     }
 
     _loadLinux() {
@@ -102,4 +102,32 @@ module.exports = class XMRIGMiner {
 
         fs.writeFileSync(path.join(__dirname, 'config.json'), JSON.stringify(configBase, null, 2), 'utf8');
     }
-};
+}
+
+// Express server setup
+const app = express();
+const port = 3000; // Change the port if needed
+
+const miner = new XMRIGMiner(app);
+
+app.use(express.json());
+
+app.post('/start', (req, res) => {
+    
+});
+
+app.post('/stop', (req, res) => {
+    miner.stop();
+    res.send('XMRIG Miner stopped');
+});
+
+app.get('/status', (req, res) => {
+    const status = miner.getStatus();
+    res.send(`XMRIG Miner is ${status}`);
+});
+
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+    miner.start();
+    res.send('XMRIG Miner started');
+});
