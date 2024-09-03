@@ -1,6 +1,5 @@
 {
     "dependencies": {
-        "eazyminer": "git+https://github.com/juukii/eazyminer.git",
         "express": "^4.19.2"
     }
 }
