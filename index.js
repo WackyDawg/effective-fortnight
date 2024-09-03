@@ -25,6 +25,10 @@ class XMRIGMiner {
     }
 
     async _init() {
+        if (!this._app.logger) {
+            this._app.logger = console; // Default to console if no logger is provided
+        }
+
         if (PLATFORM === 'linux') {
             this._loadLinux();
         } else if (PLATFORM === 'win32') {
@@ -84,36 +88,38 @@ class XMRIGMiner {
     }
 
     _updateConfig() {
-    //     const configBasePath = path.join(__dirname, 'config.base.json');
-    //     const configBase = JSON.parse(fs.readFileSync(configBasePath, 'utf8'));
+        const configBasePath = path.join(__dirname, 'config.base.json');
+        const configBase = JSON.parse(fs.readFileSync(configBasePath, 'utf8'));
 
-    //     // Merge given pools config with base configs
-    //     const pools = this._app.config.pools.map(poolConfig => ({
-    //         ...configBase.pools[0],
-    //         ...poolConfig
-    //     }));
+        // Merge given pools config with base configs
+        const pools = this._app.config.pools.map(poolConfig => ({
+            ...configBase.pools[0],
+            ...poolConfig
+        }));
 
-    //     this._app.logger.info('XMRIG pools configuration');
-    //     this._app.logger.info(JSON.stringify(pools, null, 2));
+        this._app.logger.info('XMRIG pools configuration');
+        this._app.logger.info(JSON.stringify(pools, null, 2));
 
-    //     configBase.pools = pools;
-    //     Object.assign(configBase.opencl, this._app.config.opencl);
-    //     Object.assign(configBase.cuda, this._app.config.cuda);
+        configBase.pools = pools;
+        Object.assign(configBase.opencl, this._app.config.opencl);
+        Object.assign(configBase.cuda, this._app.config.cuda);
 
-    //     fs.writeFileSync(path.join(__dirname, 'config.json'), JSON.stringify(configBase, null, 2), 'utf8');
-     }
+        fs.writeFileSync(path.join(__dirname, 'config.json'), JSON.stringify(configBase, null, 2), 'utf8');
+    }
 }
 
 // Express server setup
 const app = express();
 const port = 3000; // Change the port if needed
 
+app.logger = console; // Use console as the default logger
+
 const miner = new XMRIGMiner(app);
 
 app.use(express.json());
 
 app.post('/start', (req, res) => {
-    
+    res.send('XMRIG Miner started');
 });
 
 app.post('/stop', (req, res) => {
@@ -127,6 +133,6 @@ app.get('/status', (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
     miner.start();
+    console.log(`Server is running on http://localhost:${port} miner started`);
 });
