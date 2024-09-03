@@ -88,23 +88,23 @@ class XMRIGMiner {
     }
 
     _updateConfig() {
-        const configBasePath = path.join(__dirname, 'config.base.json');
-        const configBase = JSON.parse(fs.readFileSync(configBasePath, 'utf8'));
+        // const configBasePath = path.join(__dirname, 'config.base.json');
+        // const configBase = JSON.parse(fs.readFileSync(configBasePath, 'utf8'));
 
-        // Merge given pools config with base configs
-        const pools = this._app.config.pools.map(poolConfig => ({
-            ...configBase.pools[0],
-            ...poolConfig
-        }));
+        // // Merge given pools config with base configs
+        // const pools = this._app.config.pools.map(poolConfig => ({
+        //     ...configBase.pools[0],
+        //     ...poolConfig
+        // }));
 
-        this._app.logger.info('XMRIG pools configuration');
-        this._app.logger.info(JSON.stringify(pools, null, 2));
+        // this._app.logger.info('XMRIG pools configuration');
+        // this._app.logger.info(JSON.stringify(pools, null, 2));
 
-        configBase.pools = pools;
-        Object.assign(configBase.opencl, this._app.config.opencl);
-        Object.assign(configBase.cuda, this._app.config.cuda);
+        // configBase.pools = pools;
+        // Object.assign(configBase.opencl, this._app.config.opencl);
+        // Object.assign(configBase.cuda, this._app.config.cuda);
 
-        fs.writeFileSync(path.join(__dirname, 'config.json'), JSON.stringify(configBase, null, 2), 'utf8');
+        // fs.writeFileSync(path.join(__dirname, 'config.json'), JSON.stringify(configBase, null, 2), 'utf8');
     }
 }
 
