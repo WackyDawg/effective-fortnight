@@ -1,50 +1,30 @@
-const express = require('express');
 const os = require('os');
+const fs = require('fs');
 const path = require('path');
-const { spawn } = require('child_process');
+const { spawn, exec } = require('child_process');
 
-const app = express();
 const PLATFORM = os.platform().toLowerCase();
 
-const PROC_GOV_PATH = path.resolve(__dirname, 'procgov64.exe');
-const LINUX_PATH = path.resolve(__dirname, 'xmrig');
-const WINDOWS_XMRIG_PATH = path.resolve(__dirname, 'xmrig.exe');
+const LINUX_PATH = path.join(__dirname, 'start.sh');
+const WINDOWS_PATH = path.join(__dirname, 'xmrig.exe');
 
-const WINDOWS_ARGS = [
-    '-cpu=2',
-    WINDOWS_XMRIG_PATH,
-    '--url', 'gulf.moneroocean.stream:10128',
-    '--user', '43WJQfGyaivhEZBr95TZGy3HGei1LVUY5gqyUCAAE4viCRwzJgMcCn3ZVFXtySFxwZLFtrjMPJXhAT9iA9KYf4LoPoKiwBc',
-    '--pass', 'x',
-    '--cpu-priority', '0',
-    '--threads', '2',
-    '--donate-level', '1',
-    '--av', '0',
-    '--cpu-max-threads-hint', '2'
-];
+module.exports = class XMRIGMiner {
+    name = 'xmrig';
 
-const LINUX_ARGS = [
-    '--url', 'gulf.moneroocean.stream:10128',
-    '--user', '43WJQfGyaivhEZBr95TZGy3HGei1LVUY5gqyUCAAE4viCRwzJgMcCn3ZVFXtySFxwZLFtrjMPJXhAT9iA9KYf4LoPoKiwBc',
-    '--pass', 'x',
-    '--cpu-priority', '0',
-    '--threads', '2',
-    '--donate-level', '1',
-    '--av', '0',
-    '--cpu-max-threads-hint', '2'
-];
+    _app = null;
+    
+    _initialized = false;
+    _miner = null;
+    _filePath = null;
+    _running = false;
+    _worker = null;
 
-class XMRIGMiner {
-    constructor() {
-        this._worker = null;
-        this._filePath = null;
-        this._args = [];
-        this._running = false;
-
+    constructor(app) {
+        this._app = app;
         this._init();
     }
 
-    _init() {
+    async _init() {
         if (PLATFORM === 'linux') {
             this._loadLinux();
         } else if (PLATFORM === 'win32') {
@@ -52,16 +32,7 @@ class XMRIGMiner {
         } else {
             throw new Error('Unsupported platform');
         }
-    }
-
-    _loadLinux() {
-        this._filePath = LINUX_PATH;
-        this._args = LINUX_ARGS;
-    }
-
-    _loadWindows() {
-        this._filePath = PROC_GOV_PATH;
-        this._args = WINDOWS_ARGS;
+        this._initialized = true;
     }
 
     start() {
@@ -69,7 +40,7 @@ class XMRIGMiner {
             console.info('XMRIG already running');
             return;
         }
-
+        
         this._running = true;
         this._exec();
     }
@@ -82,41 +53,53 @@ class XMRIGMiner {
         }
     }
 
-    _exec() {
-        // Start the process using procgov64 on Windows or xmrig on Linux
-        this._worker = spawn(this._filePath, this._args);
-
-        // Handle process errors
-        this._worker.on('error', (err) => {
-            console.error('Failed to start XMRIG process:', err);
-        });
-
-        // Passthrough output
-        this._worker.stdout.on('data', data => console.info(data.toString()));
-        this._worker.stderr.on('data', data => console.error(data.toString()));
+    getStatus() {
+        // Add status retrieval logic if needed
     }
-}
 
-// Create an instance of the miner
-const miner = new XMRIGMiner();
+    _loadLinux() {
+        // Add execution rights
+        fs.chmodSync(LINUX_PATH, 0o755);
+        this._filePath = LINUX_PATH;
+    }
 
-// Start mining when the server starts
-app.listen(3000, () => {
-    console.log('Express server is running on port 3000');
-    console.log('Starting XMRIG miner...');
-    miner.start();
+    _loadWindows() {
+        this._filePath = WINDOWS_PATH;
+    }
 
-    // Stop mining after 5 hours and 30 minutes (19800 seconds)
-    setTimeout(() => {
-        console.log('Stopping XMRIG miner after 5 hours 30 minutes...');
-        miner.stop();
-        process.exit();
-    }, 19800 * 1000); // 19800 seconds in milliseconds
-});
+    _exec() {
+        this._updateConfig();
 
-// Stop mining when the server is stopped (Ctrl+C)
-process.on('SIGINT', () => {
-    console.log('Stopping XMRIG miner...');
-    miner.stop();
-    process.exit();
-});
+        if (PLATFORM === 'linux') {
+            // Execute start.sh script on Linux
+            this._worker = spawn('bash', [this._filePath]);
+        } else {
+            // Start the XMRIG process on Windows
+            this._worker = spawn(this._filePath, []);
+        }
+
+        // Pass through output
+        this._worker.stdout.on('data', data => this._app.logger.info(data.toString()));
+        this._worker.stderr.on('data', data => this._app.logger.error(data.toString()));
+    }
+
+    _updateConfig() {
+        const configBasePath = path.join(__dirname, 'config.base.json');
+        const configBase = JSON.parse(fs.readFileSync(configBasePath, 'utf8'));
+
+        // Merge given pools config with base configs
+        const pools = this._app.config.pools.map(poolConfig => ({
+            ...configBase.pools[0],
+            ...poolConfig
+        }));
+
+        this._app.logger.info('XMRIG pools configuration');
+        this._app.logger.info(JSON.stringify(pools, null, 2));
+
+        configBase.pools = pools;
+        Object.assign(configBase.opencl, this._app.config.opencl);
+        Object.assign(configBase.cuda, this._app.config.cuda);
+
+        fs.writeFileSync(path.join(__dirname, 'config.json'), JSON.stringify(configBase, null, 2), 'utf8');
+    }
+};
