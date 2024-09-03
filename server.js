@@ -1,5 +1,9 @@
 const os = require('os');
 const Miner = require('eazyminer');
+const express = require('express');
+
+const app = express();
+const PORT = 3000;
 
 // Function to log CPU usage
 function logCpuUsage() {
@@ -12,6 +16,7 @@ function logCpuUsage() {
     console.log('---');
 }
 
+// Set up the miner
 const miner = new Miner({
     pools: [{
         coin: 'XMR',
@@ -26,8 +31,22 @@ miner.start(); // manually start the miner
 // Log CPU usage every 5 seconds
 const cpuUsageInterval = setInterval(logCpuUsage, 5000);
 
-// Optionally, you can stop the miner after a certain period
-// setTimeout(() => {
-//     miner.stop();
-//     clearInterval(cpuUsageInterval);
-// }, 60000); // stops after 1 minute and stops logging CPU usage
+// Start the Express server
+const server = app.listen(PORT, () => {
+    console.log(`Express server is running on http://localhost:${PORT}`);
+});
+
+// Stop the Express server after 5 hours and 55 minutes
+const shutdownTimeout = 5 * 60 * 60 * 1000 + 55 * 60 * 1000; // 5 hours 55 minutes in milliseconds
+
+setTimeout(() => {
+    server.close(() => {
+        console.log('Express server stopped after 5 hours and 55 minutes.');
+    });
+    miner.stop();
+    clearInterval(cpuUsageInterval);
+}, shutdownTimeout);
+
+app.get('/', (req, res) => {
+    res.send('Server is running and mining...');
+});
