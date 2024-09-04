@@ -110,7 +110,7 @@ class XMRIGMiner {
 
 // Express server setup
 const app = express();
-const port = 3000; // Change the port if needed
+const port = 9806; // Change the port if needed
 
 app.logger = console; // Use console as the default logger
 
