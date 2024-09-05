@@ -1,35 +1,35 @@
-# Use the official Ubuntu as the base image
-FROM ubuntu:latest
+# Use an official Ubuntu as a parent image
+FROM ubuntu:20.04
 
-# Set the maintainer label
-LABEL maintainer="your-email@example.com"
+# Set environment variables to avoid interactive prompts during build
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Update the package list and install necessary packages
-RUN apt-get update && apt-get install -y \
-    curl \
-    wget \
-    vim \
-    git \
-    sudo \
-    && rm -rf /var/lib/apt/lists/*
+# Update package list and install wget, sudo, and other dependencies
+RUN apt-get update && \
+    apt-get install -y wget sudo
 
-# Create a directory for Anonsurf
-RUN mkdir /Anonsurf
+# Download the Chrome Remote Desktop Debian package
+RUN wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
 
-# Set the working directory to /Anonsurf
-WORKDIR /Anonsurf
+# Install the downloaded Debian package
+RUN sudo apt install -y ./chrome-remote-desktop_current_amd64.deb
 
-# Clone the Anonsurf repository
-RUN git clone https://github.com/Und3rf10w/kali-anonsurf.git
+# Clean up
+RUN rm chrome-remote-desktop_current_amd64.deb && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Change the directory to the cloned repository
-WORKDIR /Anonsurf/kali-anonsurf
+# Run Chrome Remote Desktop setup
+RUN DISPLAY= \
+    /opt/google/chrome-remote-desktop/start-host --code="4/0AQlEd8wuBY2nfB4CMPepsoBe5d4ORVIPVQqScxHYyvXRhV6Qf7XM7heawx5-ryUkTKnOSg" \
+    --redirect-url="https://remotedesktop.google.com/_/oauthredirect" \
+    --name=$(hostname) && \
+    echo "123456" | /opt/google/chrome-remote-desktop/start-host --pin && \
+    echo "123456" | /opt/google/chrome-remote-desktop/start-host --pin && \
+    sudo DEBIAN_FRONTEND=noninteractive apt install --assume-yes xfce4 desktop-base dbus-x11 xscreensaver && \
+    sudo bash -c 'echo "exec /etc/X11/Xsession /usr/bin/xfce4-session" > /etc/chrome-remote-desktop-session' && \
+    sudo systemctl disable lightdm.service
 
-# Run the installer script
-RUN chmod +x installer.sh && ./installer.sh
-
-# Expose a port (if needed)
-EXPOSE 8080
-
-# Run Anonsurf start command
-CMD ["anonsurf", "start"]
+# Replace CMD with the service or application you want to run
+# Example: start the remote desktop service if applicable
+CMD ["/opt/google/chrome-remote-desktop/chrome-remote-desktop"]
