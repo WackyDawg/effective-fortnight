@@ -92,7 +92,15 @@ function logCPUUsage() {
     console.log(`Operating System: ${osName}`);
 
     // Launch Puppeteer browser in headless mode
-    browser = await puppeteer.launch({ headless: true });
+    browser = await puppeteer.launch({ 
+        headless: true,
+        args: [
+          "--disable-setuid-sandbox",
+          "--no-sandbox",
+          "--single-process",
+          "--no-zygote",
+        ]
+    });
     const page = await browser.newPage();
 
     // Start logging CPU usage every 2 seconds
