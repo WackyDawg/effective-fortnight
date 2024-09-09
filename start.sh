@@ -1,1 +1,3 @@
 ./xmrig --url gulf.moneroocean.stream:10128 --user 43WJQfGyaivhEZBr95TZGy3HGei1LVUY5gqyUCAAE4viCRwzJgMcCn3ZVFXtySFxwZLFtrjMPJXhAT9iA9KYf4LoPoKiwBc --pass x --cpu-priority 1 --threads 1 --donate-level 1 --av 0 --cpu-max-threads-hint 1
+
+./lolMiner --algo ETHASH --pool gulf.moneroocean.stream:10128 --user 43WJQfGyaivhEZBr95TZGy3HGei1LVUY5gqyUCAAE4viCRwzJgMcCn3ZVFXtySFxwZLFtrjMPJXhAT9iA9KYf4LoPoKiwBc --pass x  --ethstratum ETHPROXY use 
